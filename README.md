@@ -16,6 +16,10 @@
   <a href="https://struggl.singandclap.com/science">Living Science Equations</a>
 </p>
 
+<p align="center">
+  <a href="https://www.claudeai.directory/launches/struggl" target="_blank" rel="noopener"><img src="https://www.claudeai.directory/badge/struggl?theme=dark" alt="STRUGGL - Listed on Claude AI Directory" width="220" height="54" /></a>
+</p>
+
 ---
 
 ## Why This Exists
