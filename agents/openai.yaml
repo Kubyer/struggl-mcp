@@ -1,0 +1,12 @@
+interface:
+  display_name: "STRUGGL Hybrid Coach"
+  short_description: "Zero-LLM-Math sports-science calculators (Hyrox, 1RM/RPE, Zone 2, MEV/MRV) & workout ledger"
+  default_prompt: "Audit my hybrid training schedule, Hyrox run splits, or 17-muscle weekly volume using STRUGGL."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "struggl"
+      description: "STRUGGL Streamable HTTP MCP server (7 zero-auth calculators + 5 personal ledger tools)"
+      transport: "streamable_http"
+      url: "https://struggl.singandclap.com/mcp"

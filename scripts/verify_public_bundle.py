@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""
+Zero-Secret, IP-Isolation & Open-Source Registry Validator for `struggl-mcp`.
+
+Validates:
+  1. Zero secrets, tokens, private repo URLs, Supabase hosts, or internal emails.
+  2. Zero proprietary backend imports (`mcp_server.py` imports ONLY stdlib + `httpx` + `mcp`).
+  3. Compliance with all open-source Agent Skills & MCP Registry manifests:
+     - Official MCP Registry `server.json` (description <= 100 chars, valid streamable-http remote)
+     - Google Antigravity / Cursor / Grok `plugin.json` + `mcp_config.json` (3 suggestedPrompts, square logos)
+     - Claude Code `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` + root `.mcp.json`
+     - `agentskills.io` `skills/struggl-coach/SKILL.md` (name matches dir, description <= 1024 chars, < 500 lines)
+     - OpenAI Codex `agents/openai.yaml` & Cline `llms-install.md`
+"""
+from __future__ import annotations
+
+import ast
+import json
+import re
+import sys
+from pathlib import Path
+from typing import List, Tuple
+
+FORBIDDEN_FILE_PATTERNS = (
+    re.compile(r"^\.env(\..+)?$"),
+    re.compile(r".*credentials.*\.json$", re.IGNORECASE),
+    re.compile(r".*\.(pem|key|p12|pfx)$", re.IGNORECASE),
+)
+
+# Built dynamically where needed so this file itself passes self-scan cleanly!
+FORBIDDEN_CONTENT_PATTERNS: List[Tuple[str, re.Pattern[str]]] = [
+    ("OpenAI/Anthropic secret key", re.compile(r"\bsk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}")),
+    ("Stripe key", re.compile(r"\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}")),
+    ("Stripe webhook secret", re.compile(r"\bwhsec_[A-Za-z0-9]{16,}")),
+    ("Google API key", re.compile(r"\bAIza[0-9A-Za-z_-]{30,}")),
+    ("PostHog API key", re.compile(r"\bph[cx]_[A-Za-z0-9]{20,}")),
+    ("JWT token", re.compile(r"\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}")),
+    ("PEM private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("Real STRUGGL athlete token", re.compile(r"\bstg_ath_[a-f0-9]{24,}\b")),
+    ("STRUGGL B2B secret key", re.compile(r"\bstg_b2b_[A-Za-z0-9_-]{8,}")),
+    ("Supabase project URL", re.compile(r"[a-z0-9-]+\.supabase\.co\b", re.IGNORECASE)),
+    ("Private monorepo slug", re.compile(r"struggling" + r"_tbz")),
+    ("Operator personal email", re.compile(r"tahabaziz" + r"@", re.IGNORECASE)),
+    ("Backend env secret name", re.compile(r"\b(?:SUPABASE_SERVICE_ROLE_KEY|GOOGLE_CREDENTIALS_JSON|ANTHROPIC_API_KEY|GEMINI_API_KEY)\b")),
+]
+
+ALLOWED_MCP_SERVER_IMPORTS = frozenset({
+    "__future__",
+    "os",
+    "sys",
+    "typing",
+    "httpx",
+    "mcp",
+})
+
+
+def _parse_frontmatter(md_text: str) -> Tuple[dict, str]:
+    if not md_text.startswith("---\n"):
+        raise ValueError("SKILL.md must begin with YAML frontmatter `---`")
+    end = md_text.find("\n---\n", 4)
+    if end == -1:
+        raise ValueError("SKILL.md missing closing YAML frontmatter `---`")
+    raw_yaml = md_text[4:end]
+    body = md_text[end + 5:]
+    parsed: dict = {}
+    current_map: dict | None = None
+    for line in raw_yaml.splitlines():
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+        if line.startswith("  ") and current_map is not None and ":" in line:
+            k, v = line.strip().split(":", 1)
+            current_map[k.strip()] = v.strip().strip('"').strip("'")
+        elif ":" in line:
+            k, v = line.split(":", 1)
+            key = k.strip()
+            val = v.strip()
+            if not val:
+                current_map = {}
+                parsed[key] = current_map
+            else:
+                current_map = None
+                parsed[key] = val.strip('"').strip("'")
+    return parsed, body
+
+
+def verify_bundle(bundle_root: Path) -> List[str]:
+    errors: List[str] = []
+    if not bundle_root.is_dir():
+        return [f"Bundle directory does not exist: {bundle_root}"]
+
+    # 1. Required multi-registry files
+    required_paths = [
+        "LICENSE",
+        "NOTICE",
+        "README.md",
+        ".gitignore",
+        "server.json",
+        "plugin.json",
+        "mcp_config.json",
+        ".mcp.json",
+        ".claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json",
+        "agents/openai.yaml",
+        "llms-install.md",
+        "pyproject.toml",
+        "requirements.txt",
+        "mcp_server.py",
+        "struggl_primitives.py",
+        "assets/logo.svg",
+        "assets/logo-128.png",
+        "assets/logo-400.png",
+        "assets/logo-512.png",
+        "benchmarks/llm_fitness_math_traps.md",
+        "skills/struggl-coach/SKILL.md",
+        "skills/struggl-coach/references/card_template.html",
+        "skills/struggl-coach/references/science_tools_schema.md",
+        "skills/fitness-agent-primitives/SKILL.md",
+    ]
+    for rel in required_paths:
+        if not (bundle_root / rel).exists():
+            errors.append(f"Missing required file: {rel}")
+
+    # 2. Scan every file in bundle for forbidden filenames & secret patterns
+    self_path = (bundle_root / "scripts" / "verify_public_bundle.py").resolve()
+    for p in sorted(bundle_root.rglob("*")):
+        if "__pycache__" in p.parts:
+            continue
+        if p.is_dir():
+            continue
+        rel_str = str(p.relative_to(bundle_root))
+        for pat in FORBIDDEN_FILE_PATTERNS:
+            if pat.match(p.name):
+                errors.append(f"Forbidden secret-like filename in bundle: {rel_str}")
+        if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".ico"}:
+            # Check PNG magic header
+            if p.suffix.lower() == ".png" and p.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
+                errors.append(f"Invalid PNG header: {rel_str}")
+            continue
+        text = p.read_text(encoding="utf-8")
+        if p.resolve() != self_path:
+            for label, regex in FORBIDDEN_CONTENT_PATTERNS:
+                m = regex.search(text)
+                if m:
+                    errors.append(f"Forbidden pattern ({label}) in {rel_str}: {m.group(0)[:40]!r}")
+
+    # 3. Verify `mcp_server.py` imports ONLY stdlib + httpx + mcp (zero backend coupling)
+    mcp_py = bundle_root / "mcp_server.py"
+    if mcp_py.exists():
+        tree = ast.parse(mcp_py.read_text(encoding="utf-8"), filename="mcp_server.py")
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    top = alias.name.split(".")[0]
+                    if top not in ALLOWED_MCP_SERVER_IMPORTS:
+                        errors.append(f"Disallowed import in mcp_server.py: {alias.name}")
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                top = node.module.split(".")[0]
+                if top not in ALLOWED_MCP_SERVER_IMPORTS:
+                    errors.append(f"Disallowed from-import in mcp_server.py: {node.module}")
+
+    # 4. Validate Official MCP Registry `server.json`
+    server_path = bundle_root / "server.json"
+    if server_path.exists():
+        sj = json.loads(server_path.read_text(encoding="utf-8"))
+        if sj.get("name") != "io.github.Kubyer/struggl":
+            errors.append(f"Unexpected server.json name: {sj.get('name')!r}")
+        desc = sj.get("description", "")
+        if not (1 <= len(desc) <= 100):
+            errors.append(f"server.json description must be 1..100 chars for mcp-publisher (got {len(desc)})")
+        remotes = sj.get("remotes") or []
+        if not remotes or remotes[0].get("type") != "streamable-http" or remotes[0].get("url") != "https://struggl.singandclap.com/mcp":
+            errors.append("server.json remotes[0] must target streamable-http https://struggl.singandclap.com/mcp")
+
+    # 5. Validate Antigravity / Cursor `plugin.json` & Claude `.claude-plugin/`
+    plugin_path = bundle_root / "plugin.json"
+    if plugin_path.exists():
+        pj = json.loads(plugin_path.read_text(encoding="utf-8"))
+        if pj.get("name") != "struggl":
+            errors.append("plugin.json name must be lowercase 'struggl'")
+        if len(pj.get("suggestedPrompts") or []) != 3:
+            errors.append("plugin.json must have exactly 3 suggestedPrompts")
+        logo_rel = pj.get("logo", "")
+        if not logo_rel or logo_rel.startswith("/") or ".." in logo_rel or not (bundle_root / logo_rel).exists():
+            errors.append(f"plugin.json logo path invalid or missing: {logo_rel!r}")
+
+    claude_dir = bundle_root / ".claude-plugin"
+    if claude_dir.is_dir():
+        allowed_claude_files = {"plugin.json", "marketplace.json"}
+        actual_claude_files = {f.name for f in claude_dir.iterdir()}
+        extra = actual_claude_files - allowed_claude_files
+        if extra:
+            errors.append(f".claude-plugin/ must only contain plugin.json / marketplace.json, found: {sorted(extra)}")
+        for cf in allowed_claude_files:
+            if (claude_dir / cf).exists():
+                json.loads((claude_dir / cf).read_text(encoding="utf-8"))
+
+    # 6. Validate `skills/*/SKILL.md` (`agentskills.io` spec) + pure-stdlib `struggl_primitives.py`
+    prim_py = bundle_root / "struggl_primitives.py"
+    if prim_py.exists():
+        allowed_prim_imports = frozenset({"__future__", "math", "typing"})
+        ptree = ast.parse(prim_py.read_text(encoding="utf-8"), filename="struggl_primitives.py")
+        for node in ast.walk(ptree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.split(".")[0] not in allowed_prim_imports:
+                        errors.append(f"Disallowed import in struggl_primitives.py: {alias.name}")
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                if node.module.split(".")[0] not in allowed_prim_imports:
+                    errors.append(f"Disallowed from-import in struggl_primitives.py: {node.module}")
+
+    for skill_name in ("struggl-coach", "fitness-agent-primitives"):
+        skill_path = bundle_root / "skills" / skill_name / "SKILL.md"
+        if skill_path.exists():
+            raw_skill = skill_path.read_text(encoding="utf-8")
+            fm, body = _parse_frontmatter(raw_skill)
+            if fm.get("name") != skill_name:
+                errors.append(f"SKILL.md frontmatter name must match folder {skill_name!r} (got {fm.get('name')!r})")
+            s_desc = fm.get("description", "")
+            if not (20 <= len(s_desc) <= 1024):
+                errors.append(f"{skill_name}/SKILL.md description must be 20..1024 chars (got {len(s_desc)})")
+            line_count = len(raw_skill.splitlines())
+            if line_count > 500:
+                errors.append(f"{skill_name}/SKILL.md must stay <= 500 lines (got {line_count})")
+            if len(body.split()) > 3500:
+                errors.append(f"{skill_name}/SKILL.md body exceeds recommended token budget")
+
+    return errors
+
+
+def main() -> int:
+    default_root = Path(__file__).resolve().parent.parent
+    target = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else default_root
+    errs = verify_bundle(target)
+    if errs:
+        print(f"FAILED public bundle verification ({len(errs)} error(s)):")
+        for e in errs:
+            print(f"  - {e}")
+        return 1
+    print(f"OK: {target} passed zero-secret, zero-backend-import, and multi-registry manifest checks.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

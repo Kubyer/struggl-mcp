@@ -1,0 +1,21 @@
+{
+  "name": "struggl",
+  "displayName": "STRUGGL Hybrid Coach",
+  "description": "Zero-LLM-Math sports-science calculators (Hyrox 8-lap splits, Wathan 1RM/RPE barbell plates, Karvonen Zone 2 HR, 17-muscle MEV/MAV/MRV audit, AMPK-mTOR interference tax) plus OAuth 2.1 hybrid-athlete training ledger sync.",
+  "version": "1.3.0",
+  "author": {
+    "name": "Sing And Clap",
+    "url": "https://struggl.singandclap.com"
+  },
+  "homepage": "https://struggl.singandclap.com/connect",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kubyer/struggl-mcp"
+  },
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Calculate my Hyrox 8x1 km compromised run splits and Lap 1 pacing trap from a 21:30 5K time",
+    "Audit my weekly lifting split across all 17 muscle groups for MEV/MAV/MRV and junk volume",
+    "Check my STRUGGL sessions from the last 14 days and log 4 sets of 6 Back Squats at 115 kg RPE 8"
+  ]
+}

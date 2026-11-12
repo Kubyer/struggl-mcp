@@ -1,0 +1,4 @@
+# Standalone thin HTTP client for STRUGGL MCP (stdio fallback).
+# Zero backend dependencies; zero credentials.
+mcp==2.2.0
+httpx==0.28.1

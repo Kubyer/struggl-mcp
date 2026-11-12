@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body { font-variant-numeric: tabular-nums; }
+    /* Native accessible <progress> styling (separate -webkit- and -moz- selectors) */
+    progress.stg-bar {
+      appearance: none;
+      border: 0 solid;
+      overflow: clip;
+      inline-size: 100%;
+      block-size: 6px;
+      display: block;
+      --bar-radius: 999px;
+      --bar-fill: var(--primary);
+      border-radius: var(--bar-radius);
+      background: var(--border);
+    }
+    progress.stg-bar[data-tone="ok"] { --bar-fill: #16a34a; }
+    progress.stg-bar[data-tone="warn"] { --bar-fill: #d97706; }
+    progress.stg-bar::-webkit-progress-bar { background: transparent; }
+    progress.stg-bar::-webkit-progress-value {
+      background: var(--bar-fill);
+      border-radius: var(--bar-radius);
+      transition: inline-size 0.25s;
+    }
+    progress.stg-bar::-moz-progress-bar {
+      background: var(--bar-fill);
+      border-radius: var(--bar-radius);
+      transition: inline-size 0.25s;
+    }
+    @media (forced-colors: active) {
+      .stg-pill, .stg-box { border: 1px solid ButtonBorder; }
+    }
+  </style>
+</head>
+<body class="bg-transparent text-[var(--foreground)] antialiased p-3">
+  <section class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3" aria-label="STRUGGL Hybrid Coach Summary">
+    <header class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-[var(--primary)]" aria-hidden="true"></span>
+        <span class="text-xs font-bold tracking-wider uppercase">STRUGGL</span>
+        <span id="hdr-sub" class="text-xs text-[var(--muted-foreground)]"></span>
+      </div>
+      <div id="tab-bar" class="inline-flex gap-1 p-0.5 rounded-lg bg-[var(--content)] border border-[var(--border)]" role="group" aria-label="Card view"></div>
+    </header>
+
+    <div id="hero" class="flex flex-wrap items-baseline justify-between gap-2 pb-2 border-b border-[var(--border)]"></div>
+    <div id="view-body" role="status" aria-live="polite" class="space-y-2"></div>
+
+    <footer class="flex items-center justify-between pt-2 border-t border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+      <span id="ftr-note">Zero-LLM-Math · Synced with STRUGGL Ledger</span>
+      <a href="https://struggl.singandclap.com" target="_blank" rel="noopener noreferrer" class="font-semibold text-[var(--primary)] hover:underline">Open STRUGGL ↗</a>
+    </footer>
+  </section>
+
+  <script>
+    // Replace PAYLOAD with live values returned by struggl_struggl MCP tools
+    const PAYLOAD = {
+      athlete: "Athlete",
+      subtitle: "Week of 2026-11-09",
+      headline: { title: "Back Squat · 4 × 6 @ 115 kg", stat: "138.5 kg e1RM", badge: "★ Score 80 · Proficient", sub: "RPE 8 · +12.5 kg e1RM to Advanced (151.0 kg)" },
+      muscles: [
+        { name: "Glutes", sets: 4, optimal: "4–16", max: 20, tone: "ok", badge: "✓ In range" },
+        { name: "Quadriceps", sets: 4, optimal: "8–18", max: 20, tone: "warn", badge: "↑ Under MEV" }
+      ],
+      sessions: [
+        { date: "2026-11-12", exercise: "Back Squat", detail: "4 × 6 · 115 kg · RPE 8", status: "✓ Done" }
+      ]
+    };
+
+    (function () {
+      let activeTab = PAYLOAD.muscles && PAYLOAD.muscles.length ? "volume" : "sessions";
+      const subEl = document.getElementById("hdr-sub");
+      const tabBar = document.getElementById("tab-bar");
+      const heroEl = document.getElementById("hero");
+      const bodyEl = document.getElementById("view-body");
+
+      function node(tag, cls, txt) {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (txt !== undefined && txt !== null) n.textContent = String(txt);
+        return n;
+      }
+
+      if (PAYLOAD.subtitle) subEl.textContent = "· " + PAYLOAD.subtitle;
+
+      if (PAYLOAD.headline) {
+        const left = node("div", "space-y-0.5");
+        left.appendChild(node("h2", "text-base font-bold", PAYLOAD.headline.title));
+        if (PAYLOAD.headline.sub) left.appendChild(node("p", "text-xs text-[var(--muted-foreground)]", PAYLOAD.headline.sub));
+        const right = node("div", "text-right space-y-0.5");
+        if (PAYLOAD.headline.stat) right.appendChild(node("div", "text-base font-extrabold text-[var(--primary)]", PAYLOAD.headline.stat));
+        if (PAYLOAD.headline.badge) right.appendChild(node("span", "stg-pill inline-block px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--content)] border border-[var(--border)]", PAYLOAD.headline.badge));
+        heroEl.appendChild(left);
+        heroEl.appendChild(right);
+      }
+
+      const availableTabs = [];
+      if (PAYLOAD.muscles && PAYLOAD.muscles.length) availableTabs.push(["volume", "Muscle Volume"]);
+      if (PAYLOAD.sessions && PAYLOAD.sessions.length) availableTabs.push(["sessions", "Recent Sets"]);
+
+      function renderBody() {
+        bodyEl.replaceChildren();
+        tabBar.replaceChildren();
+        if (availableTabs.length > 1) {
+          for (const [id, lbl] of availableTabs) {
+            const b = node("button", "px-2.5 py-1 rounded-md text-xs font-semibold transition-colors " + (activeTab === id ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm" : "text-[var(--muted-foreground)]"), lbl);
+            b.type = "button";
+            b.setAttribute("aria-pressed", activeTab === id ? "true" : "false");
+            b.addEventListener("click", function () { activeTab = id; renderBody(); });
+            tabBar.appendChild(b);
+          }
+        } else {
+          tabBar.style.display = "none";
+        }
+
+        if (activeTab === "volume" && PAYLOAD.muscles) {
+          const grid = node("div", "grid grid-cols-1 sm:grid-cols-2 gap-2");
+          for (const m of PAYLOAD.muscles.slice(0, 6)) {
+            const box = node("div", "stg-box rounded-lg p-2.5 bg-[var(--content)] border border-[var(--border)] space-y-1.5");
+            const top = node("div", "flex items-center justify-between gap-2");
+            top.appendChild(node("span", "text-xs font-bold", m.name + " · " + m.sets + " sets"));
+            top.appendChild(node("span", "text-xs font-medium text-[var(--muted-foreground)]", m.badge + " (" + m.optimal + ")"));
+            const bar = document.createElement("progress");
+            bar.className = "stg-bar";
+            bar.max = m.max || 20;
+            bar.value = Math.min(m.sets, bar.max);
+            bar.dataset.tone = m.tone || "ok";
+            bar.setAttribute("aria-label", m.name + " " + m.sets + " of " + bar.max + " max weekly sets");
+            box.appendChild(top);
+            box.appendChild(bar);
+            grid.appendChild(box);
+          }
+          bodyEl.appendChild(grid);
+        } else if (PAYLOAD.sessions) {
+          const list = node("div", "space-y-1.5");
+          for (const s of PAYLOAD.sessions.slice(0, 5)) {
+            const row = node("div", "stg-box flex items-center justify-between gap-2 rounded-lg px-3 py-2 bg-[var(--content)] border border-[var(--border)]");
+            const l = node("div", "");
+            l.appendChild(node("span", "text-xs font-bold", (s.date ? s.date + " · " : "") + s.exercise));
+            if (s.detail) l.appendChild(node("div", "text-xs text-[var(--muted-foreground)]", s.detail));
+            row.appendChild(l);
+            row.appendChild(node("span", "stg-pill px-2 py-0.5 rounded text-xs font-semibold bg-[var(--card)] border border-[var(--border)]", s.status || "✓ Done"));
+            list.appendChild(row);
+          }
+          bodyEl.appendChild(list);
+        }
+      }
+      renderBody();
+    })();
+  </script>
+</body>
+</html>
