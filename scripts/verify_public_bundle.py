@@ -123,7 +123,7 @@ def verify_bundle(bundle_root: Path) -> List[str]:
     # 2. Scan every file in bundle for forbidden filenames & secret patterns
     self_path = (bundle_root / "scripts" / "verify_public_bundle.py").resolve()
     for p in sorted(bundle_root.rglob("*")):
-        if "__pycache__" in p.parts:
+        if "__pycache__" in p.parts or ".git" in p.parts:
             continue
         if p.is_dir():
             continue
