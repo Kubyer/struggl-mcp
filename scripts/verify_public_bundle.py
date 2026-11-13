@@ -98,6 +98,10 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         "plugin.json",
         ".cursor-plugin/plugin.json",
         "gemini-extension.json",
+        ".agents/plugins/marketplace.json",
+        "plugins/struggl-openai/plugin.json",
+        "plugins/struggl-openai/mcp.json",
+        "plugins/struggl-openai/skills/get-started/SKILL.md",
         "mcp_config.json",
         ".mcp.json",
         ".claude-plugin/marketplace.json",
@@ -198,6 +202,42 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         gem_ext = json.loads(gemini_ext_path.read_text(encoding="utf-8"))
         if gem_ext.get("name") != "struggl" or "struggl" not in (gem_ext.get("mcpServers") or {}):
             errors.append("gemini-extension.json must define name='struggl' and mcpServers.struggl")
+
+    # 5a. Validate OpenAI ChatGPT & Codex Universal Plugin (`plugins/struggl-openai/` + `.agents/plugins/marketplace.json`)
+    oa_mkt_path = bundle_root / ".agents" / "plugins" / "marketplace.json"
+    if oa_mkt_path.exists():
+        oa_mkt = json.loads(oa_mkt_path.read_text(encoding="utf-8"))
+        oa_plugins = oa_mkt.get("plugins") or []
+        if not oa_plugins or oa_plugins[0].get("name") != "struggl":
+            errors.append(".agents/plugins/marketplace.json must declare plugin 'struggl'")
+
+    oa_bundle = bundle_root / "plugins" / "struggl-openai"
+    if oa_bundle.is_dir():
+        oapj = json.loads((oa_bundle / "plugin.json").read_text(encoding="utf-8"))
+        if oapj.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
+            errors.append("plugins/struggl-openai/plugin.json missing Agent Plugins 1.0.0 $schema")
+        oa_ext = ((oapj.get("extensions") or {}).get("com.openai") or {})
+        oa_iface = oa_ext.get("interface") or {}
+        if len(oa_iface.get("displayName") or "") > 30:
+            errors.append("OpenAI interface.displayName must be <= 30 chars")
+        if len(oa_iface.get("shortDescription") or "") > 30:
+            errors.append("OpenAI interface.shortDescription must be <= 30 chars")
+        for url_key in ("websiteURL", "supportURL", "privacyPolicyURL", "termsOfServiceURL"):
+            if not str(oa_iface.get(url_key) or "").startswith("https://"):
+                errors.append(f"OpenAI interface.{url_key} must be https://")
+        for p_str in oa_iface.get("defaultPrompt") or []:
+            if len(p_str) > 128 or "@" in p_str:
+                errors.append(f"OpenAI defaultPrompt invalid (>128 chars or contains @): {p_str!r}")
+        for icon_key in ("composerIcon", "composerIconDark", "logo", "logoDark"):
+            rel_icon = oa_iface.get(icon_key) or ""
+            if not rel_icon.startswith("./") or not (oa_bundle / rel_icon[2:]).exists():
+                errors.append(f"OpenAI {icon_key} missing or not ./-prefixed: {rel_icon!r}")
+        oa_review = ((oa_ext.get("review") or {}).get("test_cases") or {})
+        if len(oa_review.get("positive") or []) != 5 or len(oa_review.get("negative") or []) != 3:
+            errors.append("OpenAI review.test_cases requires 5 positive and 3 negative cases")
+        oamcp = json.loads((oa_bundle / "mcp.json").read_text(encoding="utf-8"))
+        if ((oamcp.get("mcpServers") or {}).get("struggl") or {}).get("url") != "https://struggl.singandclap.com/v1/connector/mcp":
+            errors.append("plugins/struggl-openai/mcp.json must target https://struggl.singandclap.com/v1/connector/mcp")
 
     claude_dir = bundle_root / ".claude-plugin"
     if claude_dir.is_dir():

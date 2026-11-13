@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "struggl": {
+      "type": "streamable-http",
+      "url": "https://struggl.singandclap.com/v1/connector/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "mixed",
+            "client": {
+              "mode": "dcr"
+            },
+            "authorizationUrl": "https://struggl.singandclap.com/oauth/authorize",
+            "tokenUrl": "https://struggl.singandclap.com/oauth/token",
+            "registrationUrl": "https://struggl.singandclap.com/oauth/register",
+            "baseScopes": ["read", "write"]
+          }
+        }
+      }
+    }
+  }
+}

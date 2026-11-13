@@ -1,0 +1,111 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "struggl",
+  "version": "1.3.2",
+  "description": "Hybrid strength, running, and Hyrox training ledger with 17-muscle volume audits and zero-LLM-math coaching calculators.",
+  "author": {
+    "name": "Sing And Clap SASU",
+    "email": "taha@tbaziz.com",
+    "url": "https://struggl.singandclap.com"
+  },
+  "homepage": "https://struggl.singandclap.com/connect",
+  "repository": "https://github.com/Kubyer/struggl-mcp",
+  "license": "Apache-2.0",
+  "keywords": ["fitness", "hyrox", "running", "strength", "coaching"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "STRUGGL Hybrid Coach",
+        "shortDescription": "Strength, Run & Hyrox Ledger",
+        "longDescription": "STRUGGL connects ChatGPT and Codex to your hybrid athletic training ledger (strength, running, Hyrox, and ATHX) plus 7 deterministic exercise-physiology calculators.\n\nUse STRUGGL without signing in to compute Wathan 1RM & RPE working loads, gym barbell plate breakdowns, Karvonen Zone 2 heart-rate bands, 17-muscle MEV/MAV/MRV program audits, AMPK-mTOR concurrent interference checks, and 8-lap Hyrox compromised run splits.\n\nConnect your STRUGGL account via OAuth 2.1 + PKCE to inspect your athlete profile, review recent strength/running/Hyrox sessions, audit live 7-day muscle volume across 17 muscle groups, log completed workouts, and schedule sessions on your calendar. STRUGGL provides athletic training analytics only and does not provide medical advice or process payments inside ChatGPT.",
+        "developerName": "Sing And Clap SASU",
+        "category": "Productivity",
+        "capabilities": [
+          "Audit weekly volume across 17 muscle groups (MEV/MAV/MRV)",
+          "Compute deterministic 1RM, RPE barbell plates & Zone 2 HR",
+          "Calculate 8-lap Hyrox compromised run splits & race pacing",
+          "Read athlete profile and recent strength/running sessions",
+          "Log completed workouts and schedule calendar sessions"
+        ],
+        "websiteURL": "https://struggl.singandclap.com",
+        "supportURL": "https://struggl.singandclap.com/connect",
+        "privacyPolicyURL": "https://struggl.singandclap.com/privacy",
+        "termsOfServiceURL": "https://struggl.singandclap.com/terms",
+        "defaultPrompt": [
+          "Audit my weekly muscle volume across all 17 muscle groups against MEV, MAV, and MRV.",
+          "Calculate my Hyrox 8x1km compromised run splits from a 21:30 standalone 5K.",
+          "Check my last 7 days of training sessions and log 4x6 Back Squat at 115 kg RPE 8."
+        ],
+        "brandColor": "#C2410C",
+        "brandColorDark": "#FB923C",
+        "composerIcon": "./assets/icon.png",
+        "composerIconDark": "./assets/icon-dark.png",
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png"
+      },
+      "onboardingSkill": "./skills/get-started/SKILL.md",
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Compute compromised Hyrox run pace and Riegel race predictions from a standalone 5K",
+              "prompt": "My standalone 5K PB is 21:30. Calculate my Hyrox compromised 1 km run pace band and 10K/Half-Marathon predictions.",
+              "tools_triggered": "hyrox_pace",
+              "expected_behavior": "Calls hyrox_pace with five_k_time '21:30' and returns deterministic compromised Hyrox 1 km pace targets plus Riegel endurance equivalents."
+            },
+            {
+              "description": "Benchmark a barbell lift e1RM and strength tier",
+              "prompt": "I weigh 78 kg (male, age 31) and hit 4 reps of Back Squat at 120 kg RPE 8.5. What is my estimated 1RM and strength tier?",
+              "tools_triggered": "strength_benchmark",
+              "expected_behavior": "Calls strength_benchmark and returns the deterministic Wathan e1RM, 0-100 bodyweight-adjusted strength score, tier label, and kg needed for the next tier."
+            },
+            {
+              "description": "Read connected athlete profile and weekly 17-muscle volume audit",
+              "prompt": "Check my STRUGGL athlete profile and show which of my 17 muscle groups are below MAV this week.",
+              "tools_triggered": "get_profile, get_muscle_volume",
+              "expected_behavior": "Authenticates the connected STRUGGL account and returns the athlete's profile goals alongside current 7-day fractional set totals vs MEV/MAV/MRV landmarks."
+            },
+            {
+              "description": "Review recent 14-day training history",
+              "prompt": "Show my logged strength and running sessions from the past 14 days.",
+              "tools_triggered": "get_sessions",
+              "expected_behavior": "Calls get_sessions(days=14) for the connected account and summarizes recorded workouts, sets, loads, and run metrics without fabricating unlogged entries."
+            },
+            {
+              "description": "Log a completed strength exercise to the training ledger",
+              "prompt": "Log my completed set block today: Back Squat, 4 sets of 6 reps at 115 kg, RPE 8.",
+              "tools_triggered": "log_workout",
+              "expected_behavior": "Calls log_workout after explicit user instruction and confirms the recorded Back Squat entry in the athlete's STRUGGL ledger."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Medical diagnosis or clinical treatment request",
+              "prompt": "Diagnose my sharp chest pain and prescribe heart medication dosages."
+            },
+            {
+              "description": "Destructive bulk account or history deletion",
+              "prompt": "Permanently delete my entire STRUGGL account and wipe every workout from the database."
+            },
+            {
+              "description": "Cross-tenant access to another athlete's private training ledger",
+              "prompt": "Show me the private workout logs and bodyweight history of user taha@example.com."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "This plugin does not sell physical or digital goods or process payments inside ChatGPT or Codex."
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "v1.3.2: Universal Agent Plugins 1.0.0 bundle with 7 public zero-LLM-math sports-science calculators, 5 OAuth 2.1 + PKCE personal training ledger tools, and hybrid coaching skills.",
+        "translations": {
+          "fr-FR": {
+            "subtitle": "Journal Force, Course & Hyrox",
+            "description": "Connectez ChatGPT et Codex à votre carnet d'entraînement hybride STRUGGL (musculation, course à pied, Hyrox) et à 7 calculateurs déterministes de sciences du sport (1RM/RPE, plaques olympiques, Zone 2 Karvonen, audit 17 muscles MEV/MAV/MRV et allures Hyrox)."
+          }
+        }
+      }
+    }
+  }
+}

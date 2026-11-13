@@ -1,0 +1,20 @@
+{
+  "name": "struggl-marketplace",
+  "interface": {
+    "displayName": "STRUGGL Hybrid Athlete Plugins"
+  },
+  "plugins": [
+    {
+      "name": "struggl",
+      "source": {
+        "source": "local",
+        "path": "./plugins/struggl-openai"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_FIRST_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
