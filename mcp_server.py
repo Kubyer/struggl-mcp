@@ -62,7 +62,7 @@ def _api_url() -> str:
 
 def _request(method: str, path: str, *, auth: bool = True, params: Optional[Dict[str, Any]] = None,
              json: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    headers = {"User-Agent": "struggl-mcp/1.0"}
+    headers = {"User-Agent": "struggl-mcp-stdio/1.3.1"}
     if auth:
         token = os.environ.get("STRUGGL_API_TOKEN", "").strip()
         if not token:

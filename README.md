@@ -111,13 +111,22 @@ Install directly via `plugin.json` (OAuth 2.1 automatic sign-in on `https://stru
 }
 ```
 
-### 5. OpenAI Codex (`~/.codex/config.toml`)
+### 5. OpenAI Codex &amp; ChatGPT (`~/.codex/config.toml` / Custom MCP)
 ```toml
 [mcp_servers.struggl]
 url = "https://struggl.singandclap.com/mcp"
 ```
+*(In ChatGPT Connectors, connect `https://struggl.singandclap.com/v1/connector/mcp` via OAuth 2.1.)*
 
-### 6. OpenClaw / ClawHub & Nous Hermes
+### 6. Gemini CLI (`geminicli.com/extensions`)
+```bash
+gemini extensions install https://github.com/Kubyer/struggl-mcp
+```
+
+### 7. Lovable (`lovable.dev`)
+In your Lovable workspace (`Settings → Connectors → Custom MCP Server`), add `https://struggl.singandclap.com/mcp` for zero-auth sports-science tools while building fitness apps, or `https://struggl.singandclap.com/v1/connector/mcp` with OAuth 2.1.
+
+### 8. OpenClaw / ClawHub &amp; Nous Hermes
 ```bash
 clawhub install struggl-coach
 ```

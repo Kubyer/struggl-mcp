@@ -40,6 +40,12 @@ python3 "${TARGET_DIR}/scripts/verify_public_bundle.py" "${TARGET_DIR}"
 (
   cd "${TARGET_DIR}"
   git init -b main >/dev/null
+  if [[ -z "$(git config user.name || true)" ]]; then
+    git config user.name "STRUGGL"
+  fi
+  if [[ -z "$(git config user.email || true)" ]]; then
+    git config user.email "noreply@singandclap.com"
+  fi
   git add .
   git commit -m "Initial public release of struggl-mcp (MCP server + struggl-coach Agent Skill)" >/dev/null
 )

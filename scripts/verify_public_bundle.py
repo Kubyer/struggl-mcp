@@ -96,6 +96,8 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         ".gitignore",
         "server.json",
         "plugin.json",
+        ".cursor-plugin/plugin.json",
+        "gemini-extension.json",
         "mcp_config.json",
         ".mcp.json",
         ".claude-plugin/marketplace.json",
@@ -184,6 +186,18 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         logo_rel = pj.get("logo", "")
         if not logo_rel or logo_rel.startswith("/") or ".." in logo_rel or not (bundle_root / logo_rel).exists():
             errors.append(f"plugin.json logo path invalid or missing: {logo_rel!r}")
+
+    cursor_plugin_path = bundle_root / ".cursor-plugin" / "plugin.json"
+    if cursor_plugin_path.exists():
+        cur_pj = json.loads(cursor_plugin_path.read_text(encoding="utf-8"))
+        if cur_pj.get("name") != "struggl":
+            errors.append(".cursor-plugin/plugin.json name must be 'struggl'")
+
+    gemini_ext_path = bundle_root / "gemini-extension.json"
+    if gemini_ext_path.exists():
+        gem_ext = json.loads(gemini_ext_path.read_text(encoding="utf-8"))
+        if gem_ext.get("name") != "struggl" or "struggl" not in (gem_ext.get("mcpServers") or {}):
+            errors.append("gemini-extension.json must define name='struggl' and mcpServers.struggl")
 
     claude_dir = bundle_root / ".claude-plugin"
     if claude_dir.is_dir():
