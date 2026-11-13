@@ -1,23 +1,23 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "struggl-marketplace",
-  "version": "1.3.0",
-  "description": "Official STRUGGL Zero-LLM-Math sports-science MCP server and hybrid-athlete coaching skill for Claude Code.",
+  "version": "1.3.1",
+  "description": "Official STRUGGL Zero-LLM-Math sports-science MCP connector and hybrid-athlete coaching skills for Claude Code, Cowork, and Claude apps.",
   "owner": {
-    "name": "Sing And Clap",
+    "name": "Sing And Clap SASU",
+    "email": "taha@tbaziz.com",
     "url": "https://struggl.singandclap.com"
   },
   "plugins": [
     {
       "name": "struggl",
-      "description": "7 free deterministic sports-science calculators (Hyrox splits, 1RM/RPE plates, Karvonen Zone 2 HR, 17-muscle MEV/MAV/MRV audit, concurrent interference tax) + stateful workout ledger sync.",
-      "version": "1.3.0",
+      "description": "12 deterministic sports-science & hybrid-athlete training tools (Hyrox splits, 1RM/RPE plates, Karvonen Zone 2 HR, 17-muscle MEV/MAV/MRV audit, concurrent interference tax, OAuth 2.1 workout ledger).",
       "author": {
-        "name": "Sing And Clap",
+        "name": "Sing And Clap SASU",
         "url": "https://struggl.singandclap.com"
       },
       "category": "productivity",
-      "source": "./"
+      "source": "./plugins/struggl"
     }
   ]
 }

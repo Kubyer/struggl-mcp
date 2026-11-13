@@ -98,18 +98,18 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         "plugin.json",
         "mcp_config.json",
         ".mcp.json",
-        ".claude-plugin/plugin.json",
         ".claude-plugin/marketplace.json",
+        "plugins/struggl/.claude-plugin/plugin.json",
+        "plugins/struggl/.mcp.json",
+        "plugins/struggl/README.md",
+        "plugins/struggl/LICENSE",
+        "plugins/struggl/NOTICE",
         "agents/openai.yaml",
         "llms-install.md",
         "pyproject.toml",
         "requirements.txt",
         "mcp_server.py",
         "struggl_primitives.py",
-        "assets/logo.svg",
-        "assets/logo-128.png",
-        "assets/logo-400.png",
-        "assets/logo-512.png",
         "benchmarks/llm_fitness_math_traps.md",
         "skills/struggl-coach/SKILL.md",
         "skills/struggl-coach/references/card_template.html",
@@ -119,6 +119,8 @@ def verify_bundle(bundle_root: Path) -> List[str]:
     for rel in required_paths:
         if not (bundle_root / rel).exists():
             errors.append(f"Missing required file: {rel}")
+    if len(list((bundle_root / "assets").glob("*"))) < 4:
+        errors.append("assets/ must contain SVG + square PNG logos")
 
     # 2. Scan every file in bundle for forbidden filenames & secret patterns
     self_path = (bundle_root / "scripts" / "verify_public_bundle.py").resolve()
@@ -185,14 +187,42 @@ def verify_bundle(bundle_root: Path) -> List[str]:
 
     claude_dir = bundle_root / ".claude-plugin"
     if claude_dir.is_dir():
-        allowed_claude_files = {"plugin.json", "marketplace.json"}
+        allowed_claude_files = {"marketplace.json"}
         actual_claude_files = {f.name for f in claude_dir.iterdir()}
         extra = actual_claude_files - allowed_claude_files
         if extra:
-            errors.append(f".claude-plugin/ must only contain plugin.json / marketplace.json, found: {sorted(extra)}")
+            errors.append(f".claude-plugin/ at root must only contain marketplace.json, found: {sorted(extra)}")
         for cf in allowed_claude_files:
             if (claude_dir / cf).exists():
                 json.loads((claude_dir / cf).read_text(encoding="utf-8"))
+
+    # 5b. Validate dedicated Claude Directory bundle (`plugins/struggl/`)
+    claude_bundle = bundle_root / "plugins" / "struggl"
+    if claude_bundle.is_dir():
+        cpj_path = claude_bundle / ".claude-plugin" / "plugin.json"
+        if cpj_path.exists():
+            cpj = json.loads(cpj_path.read_text(encoding="utf-8"))
+            for req_key in ("privacyPolicyUrl", "supportUrl", "documentationUrl", "termsOfServiceUrl", "icon"):
+                if not cpj.get(req_key):
+                    errors.append(f"plugins/struggl/.claude-plugin/plugin.json missing {req_key}")
+        cmcp_path = claude_bundle / ".mcp.json"
+        if cmcp_path.exists():
+            cmcp = json.loads(cmcp_path.read_text(encoding="utf-8"))
+            url = ((cmcp.get("mcpServers") or {}).get("struggl") or {}).get("url")
+            if url != "https://struggl.singandclap.com/v1/connector/mcp":
+                errors.append(f"plugins/struggl/.mcp.json must match Connector URL, got {url!r}")
+        allowed_ext = {".md", ".json", ".png"}
+        for fp in sorted(claude_bundle.rglob("*")):
+            if fp.is_dir():
+                continue
+            if fp.name not in {"LICENSE", "NOTICE"} and fp.suffix.lower() not in allowed_ext:
+                errors.append(f"Disallowed file type in plugins/struggl/: {fp.relative_to(claude_bundle)}")
+            if fp.suffix.lower() in {".md", ".json"} or fp.name in {"LICENSE", "NOTICE"}:
+                txt = fp.read_text(encoding="utf-8")
+                if "../" in txt or "..\\" in txt:
+                    errors.append(f"Relative parent climb in {fp.relative_to(claude_bundle)}")
+                if re.search(r"\b(?:STRUGGL_API_TOKEN|stg_ath_|curl\s+-|npx\s+|uvx\s+)", txt):
+                    errors.append(f"Disallowed token/launcher pattern in {fp.relative_to(claude_bundle)}")
 
     # 6. Validate `skills/*/SKILL.md` (`agentskills.io` spec) + pure-stdlib `struggl_primitives.py`
     prim_py = bundle_root / "struggl_primitives.py"

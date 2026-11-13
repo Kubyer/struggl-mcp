@@ -227,7 +227,7 @@ def build_server():
     from mcp.server.mcpserver import MCPServer
     from mcp.types import ToolAnnotations
 
-    server = MCPServer("struggl", version="1.3.0", instructions=(
+    server = MCPServer("struggl", version="1.3.1", instructions=(
         "Struggl is a Zero-LLM-Math hybrid-athlete (Hyrox, running, strength) sports-science engine "
         "and training ledger. Call the 7 unauthenticated calculators immediately for pacing, 1RM/RPE, "
         "Zone 2 HR, 17-muscle volume audits, and interference checks. Read the athlete's sessions before "

@@ -163,6 +163,7 @@ struggl-mcp/
 
 - **Zero Secrets in Repo:** This repository contains declarative manifests, open-source skill instructions, pure-stdlib physiology primitives, literature benchmarks, and a thin HTTP client (`mcp_server.py` imports only Python stdlib, `httpx`, and `mcp`). Run `python scripts/verify_public_bundle.py` to audit every file.
 - **OAuth 2.1 + Scoped Revocable Tokens:** Supports 1-click OAuth 2.1 + PKCE (`https://struggl.singandclap.com/v1/connector/mcp`) and optional scoped tokens (`stg_ath_...`), stored server-side strictly as SHA-256 hashes and revocable at `https://struggl.singandclap.com/connect`.
+- **Privacy Policy, Terms &amp; Support:** [Privacy Policy](https://struggl.singandclap.com/privacy) · [Terms of Service](https://struggl.singandclap.com/terms) · [API &amp; Connector Docs](https://struggl.singandclap.com/v1/connector/docs) · `taha@tbaziz.com`.
 
 ## License
 

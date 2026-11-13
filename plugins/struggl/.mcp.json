@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "struggl": {
+      "type": "http",
+      "url": "https://struggl.singandclap.com/v1/connector/mcp"
+    }
+  }
+}
