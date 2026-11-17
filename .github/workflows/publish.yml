@@ -1,0 +1,96 @@
+name: Publish Package (PyPI & npm)
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Verify bundle & build artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify public bundle manifests & zero secrets
+        run: python3 scripts/verify_public_bundle.py
+
+      - name: Verify CLI & version parity
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          node --check bin/cli.mjs
+          CLI_VER="$(node bin/cli.mjs --version)"
+          PY_VER="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          NPM_VER="$(node -e 'console.log(JSON.parse(require("fs").readFileSync("package.json","utf8")).version)')"
+          test "$CLI_VER" = "$PY_VER"
+          test "$PY_VER" = "$NPM_VER"
+          if [[ "$GITHUB_REF_NAME" == v* ]]; then
+            test "$GITHUB_REF_NAME" = "v$PY_VER"
+          fi
+
+      - name: Build Python sdist & wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check dist/*
+
+      - name: Validate npm tarball
+        run: npm pack --dry-run
+
+      - name: Upload Python distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI (OIDC)
+    needs: [verify]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download Python distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-npm:
+    name: Publish to npm (OIDC)
+    needs: [verify]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24 (npm >= 11.5.1 for OIDC)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Verify npm CLI supports OIDC trusted publishing
+        run: |
+          npm --version
+          node -e 'const [M,m,p]=require("child_process").execSync("npm --version").toString().trim().split(".").map(Number); if (M<11 || (M===11 && (m<5 || (m===5 && p<1)))) { console.error("npm >= 11.5.1 required"); process.exit(1); }'
+
+      - name: Publish package to npm with provenance
+        run: npm publish --provenance --access public

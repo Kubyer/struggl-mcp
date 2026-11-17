@@ -30,6 +30,13 @@ rsync -a \
   --exclude='.git' \
   --exclude='__pycache__' \
   --exclude='*.pyc' \
+  --exclude='dist' \
+  --exclude='build' \
+  --exclude='*.egg-info' \
+  --exclude='node_modules' \
+  --exclude='*.tgz' \
+  --exclude='.pytest_cache' \
+  --exclude='.ruff_cache' \
   --exclude='.DS_Store' \
   "${BUNDLE_DIR}/" "${TARGET_DIR}/"
 

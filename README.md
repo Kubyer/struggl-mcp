@@ -131,11 +131,20 @@ In your Lovable workspace (`Settings → Connectors → Custom MCP Server`), add
 clawhub install struggl-coach
 ```
 
-### 7. Local `stdio` Fallback (Claude Desktop / Legacy Hosts)
+### 9. One-Line CLI / Local `stdio` Bridge (`npx`, `uvx`, Python)
+
+For local `stdio`-only MCP hosts without native Streamable HTTP support:
+
 ```bash
-pip install -r requirements.txt
-python mcp_server.py
+# Node.js >= 18 (zero-dependency npx stdio bridge -> https://struggl.singandclap.com/mcp)
+npx -y struggl-mcp
+
+# Python >= 3.10 (also installs `import struggl_primitives`)
+uvx struggl-mcp
+# or: pip install struggl-mcp && struggl-mcp
 ```
+
+Set `STRUGGL_API_TOKEN=stg_ath_YOUR_PERSONAL_TOKEN` in the MCP server's `env` if you also want the 5 personal ledger tools alongside the 7 zero-auth science calculators.
 
 ---
 
@@ -165,6 +174,8 @@ struggl-mcp/
 │   ├── struggl-coach/                  # Athlete coaching skill + inline UI card template
 │   └── fitness-agent-primitives/       # Builder skill for custom fitness & Hyrox AI agents
 ├── benchmarks/llm_fitness_math_traps.md
+├── bin/cli.mjs                         # Zero-dependency npx stdio-to-HTTP bridge
+├── package.json / pyproject.toml       # npm (`npx struggl-mcp`) & PyPI (`uvx struggl-mcp`) manifests
 └── mcp_server.py                       # Zero-secret thin HTTP->stdio client (httpx + mcp only)
 ```
 

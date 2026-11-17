@@ -113,6 +113,9 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         "agents/openai.yaml",
         "llms-install.md",
         "pyproject.toml",
+        "package.json",
+        "bin/cli.mjs",
+        ".github/workflows/publish.yml",
         "requirements.txt",
         "mcp_server.py",
         "struggl_primitives.py",
@@ -202,6 +205,32 @@ def verify_bundle(bundle_root: Path) -> List[str]:
         gem_ext = json.loads(gemini_ext_path.read_text(encoding="utf-8"))
         if gem_ext.get("name") != "struggl" or "struggl" not in (gem_ext.get("mcpServers") or {}):
             errors.append("gemini-extension.json must define name='struggl' and mcpServers.struggl")
+
+    # 5c. Validate PyPI & npm package manifests (`pyproject.toml`, `package.json`, `bin/cli.mjs`)
+    pyproject_path = bundle_root / "pyproject.toml"
+    pkg_json_path = bundle_root / "package.json"
+    cli_mjs_path = bundle_root / "bin" / "cli.mjs"
+    if pyproject_path.exists() and pkg_json_path.exists():
+        py_ver_match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject_path.read_text(encoding="utf-8"), re.MULTILINE)
+        py_ver = py_ver_match.group(1) if py_ver_match else ""
+        pkg = json.loads(pkg_json_path.read_text(encoding="utf-8"))
+        if pkg.get("name") != "struggl-mcp":
+            errors.append(f"package.json name must be 'struggl-mcp' (got {pkg.get('name')!r})")
+        if not py_ver or pkg.get("version") != py_ver:
+            errors.append(f"package.json version ({pkg.get('version')!r}) must match pyproject.toml ({py_ver!r})")
+        if (pkg.get("bin") or {}).get("struggl-mcp") != "./bin/cli.mjs":
+            errors.append("package.json bin['struggl-mcp'] must point to './bin/cli.mjs'")
+        if pkg.get("dependencies"):
+            errors.append("package.json must stay zero-dependency (dependencies must be omitted or empty)")
+        repo_url = (pkg.get("repository") or {}).get("url")
+        if repo_url != "git+https://github.com/Kubyer/struggl-mcp.git":
+            errors.append(f"package.json repository.url must match Kubyer/struggl-mcp for npm OIDC, got {repo_url!r}")
+        if cli_mjs_path.exists():
+            cli_txt = cli_mjs_path.read_text(encoding="utf-8")
+            if not cli_txt.startswith("#!/usr/bin/env node\n"):
+                errors.append("bin/cli.mjs must start with '#!/usr/bin/env node'")
+            if f'VERSION = "{py_ver}"' not in cli_txt:
+                errors.append(f"bin/cli.mjs VERSION must match pyproject.toml ({py_ver!r})")
 
     # 5a. Validate OpenAI ChatGPT & Codex Universal Plugin (`plugins/struggl-openai/` + `.agents/plugins/marketplace.json`)
     oa_mkt_path = bundle_root / ".agents" / "plugins" / "marketplace.json"

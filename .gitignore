@@ -18,6 +18,10 @@ build/
 .pytest_cache/
 .ruff_cache/
 
+# Node / npm artifacts
+node_modules/
+*.tgz
+
 # OS & editor files
 .DS_Store
 .idea/
