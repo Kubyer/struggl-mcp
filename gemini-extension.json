@@ -1,10 +1,10 @@
 {
   "name": "struggl",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Zero-LLM-Math sports-science calculators (Hyrox 8-lap splits, Wathan 1RM/RPE barbell plates, Karvonen Zone 2 HR, 17-muscle MEV/MAV/MRV audit, AMPK-mTOR interference tax) plus optional hybrid-athlete training ledger.",
   "mcpServers": {
     "struggl": {
-      "description": "STRUGGL Streamable HTTP MCP server (7 zero-auth sports-science calculators + 5 optional OAuth 2.1 / Bearer personal ledger tools).",
+      "description": "STRUGGL Streamable HTTP MCP server (7 zero-auth sports-science calculators + 6 optional OAuth 2.1 / Bearer personal ledger tools).",
       "httpUrl": "https://struggl.singandclap.com/mcp"
     }
   }

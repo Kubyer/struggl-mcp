@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Works across ChatGPT, OpenAI Codex, and MCP hosts via the STRUGGL OAuth 2.1 MCP Connector (https://struggl.singandclap.com/v1/connector/mcp).
 metadata:
   author: Sing And Clap SASU
-  version: "1.3.1"
+  version: "1.4.0"
   homepage: https://struggl.singandclap.com/connect
 ---
 
@@ -27,18 +27,18 @@ STRUGGL (`https://struggl.singandclap.com`) separates conversational coaching fr
 
 For exact parameter enums (including all 17 `volume_audit` movement archetypes and `station_times` keys), read `./references/science_tools_schema.md`.
 
-## 2. Personal Training Ledger (5 OAuth 2.1 Tools)
+## 2. Personal Training Ledger (6 OAuth 2.1 Tools)
 
-When the athlete wants to inspect their real history, check current-week fatigue, or log/schedule workouts (`get_profile`, `get_sessions`, `get_muscle_volume`, `log_workout`, `plan_workout`):
+When the athlete wants to inspect their real history, check current-week fatigue, or log/schedule workouts (`get_coaching_brief`, `get_profile`, `get_sessions`, `get_muscle_volume`, `log_workout`, `plan_workout`):
 
 - Authenticate via **OAuth 2.1 + PKCE** through the `struggl` MCP Connector (`https://struggl.singandclap.com/v1/connector/mcp`). Click **Connect** when prompted in ChatGPT or Codex to complete OAuth 2.1 sign-in.
 - New athletes can create a STRUGGL account at `https://struggl.singandclap.com/connect`.
 
 ## 3. Daily Hybrid Coaching Rules
 
-1. **Read Before Prescribing:** Always call `get_profile()`, `get_sessions(days=14)`, and `get_muscle_volume()` before prescribing personal exercises or weights. Target muscles sitting below MAV while respecting the 48h heavy-hinge and 6h AMPK-mTOR windows.
-2. **Explicit Confirmation on Writes:**
-   - Call `log_workout` **only** for exercises the athlete confirms they completed, **once per exercise**.
-   - Call `plan_workout` **only** when the athlete asks to schedule on their calendar (`date="YYYY-MM-DD"`), **once per exercise**.
+1. **Mandatory Step 1 — Unified Coaching Brief:** Always call `get_coaching_brief(days=14)` **first** before prescribing, adjusting, or logging workouts. In one deterministic round-trip it returns profile, goals, active pain/injury biomechanical constraints, EWMA ACWR training load, 17-muscle weekly MEV/MAV/MRV audit, measured Wathan e1RMs, stored equipment/preference memories, and recent sessions.
+2. **Batch Writes + App Mirror Sync:**
+   - Call `log_workout` **only** for exercises the athlete confirms they completed. When logging multiple exercises, pass `sessions=[...]` in **one single batch call** with `session_title` and a concise 1–3 sentence `debrief_summary` so the STRUGGL mobile/web app renders one unified card in its read-only connector mirror feed.
+   - Call `plan_workout` **only** when the athlete asks to schedule on their calendar (`date="YYYY-MM-DD"`), passing `sessions=[...]`, `session_title`, `debrief_summary`, and `replace=True` when overwriting a day's existing plan.
    - For `dip`, `pull_up`, and `chin_up`, `weight_kg` is always the **added belt load** (`0` for bodyweight).
 3. **Concise Coaching Synthesis:** The STRUGGL connector automatically attaches interactive MCP Apps UI cards (`ui://struggl/coach-card.html`) in MCP-UI hosts that render MCP Apps. Keep your prose synthesis focused on 2–4 actionable coaching takeaways rather than repeating raw JSON tables verbatim.

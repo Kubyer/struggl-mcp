@@ -94,6 +94,13 @@ def _drop_none(d: Dict[str, Any]) -> Dict[str, Any]:
 
 # ── Personal tools (token) ────────────────────────────────────────────────────
 
+def get_coaching_brief(days: int = 14) -> Dict[str, Any]:
+    """MANDATORY STEP 1 for personal coaching turns: unified deterministic brief returning profile,
+    goals, active pain constraints, EWMA ACWR load, 17-muscle weekly MEV/MAV/MRV audit, measured
+    Wathan e1RMs & sub-muscle balance, stored athlete equipment/preference notes, and recent sessions."""
+    return _request("GET", "/v1/me/coaching-brief", params={"days": days})
+
+
 def get_profile() -> Dict[str, Any]:
     """The athlete's profile (bodyweight, height, sex, sport, phase) and goals (races, target times)."""
     return _request("GET", "/v1/me/profile")
@@ -110,29 +117,38 @@ def get_muscle_volume() -> Dict[str, Any]:
     return _request("GET", "/v1/me/muscle-volume")
 
 
-def log_workout(exercise: str, date: Optional[str] = None, sets: Optional[int] = None,
+def log_workout(exercise: Optional[str] = None, date: Optional[str] = None, sets: Optional[int] = None,
                 reps: Optional[int] = None, weight_kg: Optional[float] = None, rpe: Optional[float] = None,
                 duration_min: Optional[float] = None, distance_km: Optional[float] = None,
-                exercise_type: str = "strength", comments: Optional[str] = None) -> Dict[str, Any]:
-    """Record one exercise the athlete has COMPLETED. date defaults to today. Strength: sets / reps /
-    weight_kg (added load) / rpe. Endurance: duration_min / distance_km with exercise_type="endurance".
-    Only log what the athlete says they did; call once per exercise."""
+                exercise_type: str = "strength", comments: Optional[str] = None,
+                sessions: Optional[List[Dict[str, Any]]] = None,
+                session_title: Optional[str] = None,
+                debrief_summary: Optional[str] = None) -> Dict[str, Any]:
+    """Record COMPLETED exercise(s) into the athlete's ledger (prefer passing `sessions=[...]` +
+    `debrief_summary` in a single batch call for a whole workout so the STRUGGL app displays one
+    consolidated workout card in the connector feed)."""
     return _request("POST", "/v1/me/workouts/log", json=_drop_none({
         "exercise": exercise, "date": date, "sets": sets, "reps": reps, "weight_kg": weight_kg,
         "rpe": rpe, "duration_min": duration_min, "distance_km": distance_km,
-        "exercise_type": exercise_type, "comments": comments}))
+        "exercise_type": exercise_type, "comments": comments, "sessions": sessions,
+        "session_title": session_title, "debrief_summary": debrief_summary}))
 
 
-def plan_workout(exercise: str, date: str, sets: Optional[int] = None, reps: Optional[int] = None,
-                 weight_kg: Optional[float] = None, rpe: Optional[float] = None,
+def plan_workout(exercise: Optional[str] = None, date: Optional[str] = None, sets: Optional[int] = None,
+                 reps: Optional[int] = None, weight_kg: Optional[float] = None, rpe: Optional[float] = None,
                  duration_min: Optional[float] = None, distance_km: Optional[float] = None,
-                 exercise_type: str = "strength", comments: Optional[str] = None) -> Dict[str, Any]:
-    """Add one PLANNED exercise to the athlete's calendar on `date` (YYYY-MM-DD).
-    Only when the athlete asks for it; call once per exercise."""
+                 exercise_type: str = "strength", comments: Optional[str] = None,
+                 sessions: Optional[List[Dict[str, Any]]] = None,
+                 replace: Optional[bool] = None,
+                 session_title: Optional[str] = None,
+                 debrief_summary: Optional[str] = None) -> Dict[str, Any]:
+    """Schedule PLANNED exercise(s) on the athlete's calendar (prefer passing `sessions=[...]` +
+    `debrief_summary` in a single batch call for a full session or multi-day week plan)."""
     return _request("POST", "/v1/me/workouts/plan", json=_drop_none({
         "exercise": exercise, "date": date, "sets": sets, "reps": reps, "weight_kg": weight_kg,
         "rpe": rpe, "duration_min": duration_min, "distance_km": distance_km,
-        "exercise_type": exercise_type, "comments": comments}))
+        "exercise_type": exercise_type, "comments": comments, "sessions": sessions,
+        "replace": replace, "session_title": session_title, "debrief_summary": debrief_summary}))
 
 
 # ── Public calculators (no token) ────────────────────────────────────────────
@@ -206,6 +222,7 @@ def hyrox_autopsy(standalone_5k_time: str, run_times: Optional[List[str]] = None
 
 
 TOOLS = (
+    get_coaching_brief,
     get_profile,
     get_sessions,
     get_muscle_volume,
@@ -227,11 +244,12 @@ def build_server():
     from mcp.server.mcpserver import MCPServer
     from mcp.types import ToolAnnotations
 
-    server = MCPServer("struggl", version="1.3.1", instructions=(
+    server = MCPServer("struggl", version="1.4.0", instructions=(
         "Struggl is a Zero-LLM-Math hybrid-athlete (Hyrox, running, strength) sports-science engine "
         "and training ledger. Call the 7 unauthenticated calculators immediately for pacing, 1RM/RPE, "
-        "Zone 2 HR, 17-muscle volume audits, and interference checks. Read the athlete's sessions before "
-        "prescribing personal workouts, and log or plan only what the athlete confirms, one exercise per call."))
+        "Zone 2 HR, 17-muscle volume audits, and interference checks. For personal coaching turns, "
+        "ALWAYS call `get_coaching_brief` FIRST, and pass multiple exercises together via `sessions=[...]` "
+        "+ `debrief_summary` in a single batch `log_workout` or `plan_workout` call."))
     for fn in TOOLS:
         write = fn.__name__ in WRITE_TOOLS
         server.tool(annotations=ToolAnnotations(readOnlyHint=not write, destructiveHint=False,

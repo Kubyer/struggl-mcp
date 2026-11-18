@@ -1,6 +1,8 @@
 # STRUGGL MCP Tools — Parameter & Literature Reference
 
-## Part 1: 7 Zero-Auth Public Sports-Science Calculators (`POST https://struggl.singandclap.com/mcp`)
+All 13 tools below are served by the declared STRUGGL MCP Connector (`https://struggl.singandclap.com/v1/connector/mcp`).
+
+## Part 1: 7 Deterministic Sports-Science Calculators
 
 ### 1. `hyrox_pace`
 - **Inputs:** `five_k` (`MM:SS`, required, e.g. `"21:30"`), `goal` (`H:MM:SS`, optional, e.g. `"1:15:00"`).
@@ -53,15 +55,16 @@
 - **Inputs:**
   - `sessions`: array of `{ "start": "YYYY-MM-DDTHH:MM:SS", "type": "strength" | "endurance", "duration_min": 60, "intensity": "light" | "moderate" | "heavy" | "easy" | "hard", "modality": "run", "distance_km": 10.0, "lower_body": true, "hinge": false, "explosive": false, "max_test": false }`
   - `priority`: optional `"strength"` | `"endurance"`
-- **Returns:** Interference Tax (`0–40%`), CNS strain score (`1–10`), rule-level violations (`<3h` / `3–6h` AMPK-mTOR proximity, `36h` glycogen depletion before legs, `48h` heavy hinge before quality run, back-to-back hard runs, Seiler `80/20` drift), and actionable fixes.
+- **Returns:** Interference Tax (`0–40%`), CNS strain score (`1–10`), rule-level violations (`<3h` / `3–6h` proximity, `36h` glycogen depletion before legs, `48h` heavy hinge before quality run, back-to-back hard runs, Seiler `80/20` drift), and actionable fixes.
 - **DOIs:** `10.1519/JSC.0b013e31823a3e2d` (Wilson et al., 2012), `10.1519/JSC.0000000000000798` (Robineau et al., 2016), `10.1007/s40279-021-01587-7` (Schumann et al., 2022), `10.1123/ijspp.5.3.276` (Seiler, 2010)
 
 ---
 
-## Part 2: 5 Authenticated Personal Ledger Tools (`Bearer stg_ath_...` or OAuth 2.1)
+## Part 2: 6 OAuth 2.1 Personal Ledger Tools
 
-1. `get_profile` (`read`): Biometrics, primary modality, training phase, and target race calendar.
-2. `get_sessions` (`read`): Completed and scheduled workouts over `days` (`1–90`, default `14`) or `date` (`YYYY-MM-DD`).
-3. `get_muscle_volume` (`read`): Live current-week 17-muscle hard-set ledger from logged workouts.
-4. `log_workout` (`write`): Persist one completed exercise with arg-keyed duplicate-write protection and automatic e1RM PR detection.
-5. `plan_workout` (`write`): Schedule one planned exercise on `date` (`YYYY-MM-DD`).
+1. `get_coaching_brief` (`read`, **recommended Step 1**): Single-call deterministic coaching brief (`days` `1–30`, default `14`) returning profile, goals, active pain/injury biomechanical constraints, EWMA ACWR training load, 17-muscle weekly MEV/MAV/MRV audit, measured Wathan e1RMs & sub-muscle balance, stored athlete equipment/preference memories, and recent sessions.
+2. `get_profile` (`read`): Biometrics, primary modality, training phase, and target race calendar.
+3. `get_sessions` (`read`): Completed and scheduled workouts over `days` (`1–90`, default `14`) or `date` (`YYYY-MM-DD`).
+4. `get_muscle_volume` (`read`): Live current-week 17-muscle hard-set ledger from logged workouts.
+5. `log_workout` (`write`): Persist one completed exercise or a multi-exercise batch (`sessions=[...]`, `session_title`, `debrief_summary`) with duplicate-write protection, e1RM PR detection, and automatic read-only connector mirror sync in the STRUGGL app.
+6. `plan_workout` (`write`): Schedule one planned exercise or a multi-exercise batch (`sessions=[...]`, `session_title`, `debrief_summary`, `replace=True`) on `date` (`YYYY-MM-DD`) with automatic connector mirror sync.

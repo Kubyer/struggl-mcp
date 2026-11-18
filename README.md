@@ -28,7 +28,7 @@ Ask a frontier LLM what belt weight an `80 kg` athlete (`+30 kg x 5 @ RPE 9` pul
 
 Full reproducible breakdown with `curl` calls and PubMed/Crossref DOIs: **[`benchmarks/llm_fitness_math_traps.md`](benchmarks/llm_fitness_math_traps.md)**.
 
-`struggl-mcp` gives any coding or personal AI agent **12 deterministic tools** over stateless Streamable HTTP (`https://struggl.singandclap.com/mcp`) + an interactive **MCP Apps UI Card** (`ui://struggl/coach-card.html`) + a portable **`agentskills.io` `SKILL.md`**.
+`struggl-mcp` gives any coding or personal AI agent **13 deterministic tools** over stateless Streamable HTTP (`https://struggl.singandclap.com/mcp`) + an interactive **MCP Apps UI Card** (`ui://struggl/coach-card.html`) + a portable **`agentskills.io` `SKILL.md`**.
 
 ---
 
@@ -48,9 +48,9 @@ Connect `https://struggl.singandclap.com/mcp` with **no token and no signup** to
 
 ---
 
-## 5 Personal Training Ledger Tools (Optional Account Sync)
+## 6 Personal Training Ledger Tools (Optional Account Sync)
 
-For athletes who want their coding agent to check real 14-day fatigue between coding blocks, audit live weekly sets, and log or schedule workouts (`get_profile`, `get_sessions`, `get_muscle_volume`, `log_workout`, `plan_workout`):
+For athletes who want their coding agent to fetch a 1-call physiological coaching brief (`get_coaching_brief`), check real 14-day fatigue between coding blocks, audit live weekly sets, and batch-log or schedule workouts (`get_profile`, `get_sessions`, `get_muscle_volume`, `log_workout`, `plan_workout` — automatically mirrored into a read-only feed in the STRUGGL mobile/web app):
 
 1. Start your **30-day free STRUGGL Coach trial (no credit card)** at **[https://struggl.singandclap.com/connect](https://struggl.singandclap.com/connect)**.
 2. Connect via **OAuth 2.1 + PKCE** (`https://struggl.singandclap.com/v1/connector/mcp`) or generate a scoped `read` / `read + write` personal token (`stg_ath_...`).
@@ -144,7 +144,7 @@ uvx struggl-mcp
 # or: pip install struggl-mcp && struggl-mcp
 ```
 
-Set `STRUGGL_API_TOKEN=stg_ath_YOUR_PERSONAL_TOKEN` in the MCP server's `env` if you also want the 5 personal ledger tools alongside the 7 zero-auth science calculators.
+Set `STRUGGL_API_TOKEN=stg_ath_YOUR_PERSONAL_TOKEN` in the MCP server's `env` if you also want the 6 personal ledger tools alongside the 7 zero-auth science calculators.
 
 ---
 

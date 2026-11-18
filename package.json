@@ -1,6 +1,6 @@
 {
   "name": "struggl-mcp",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "Zero-LLM-Math sports-science MCP bridge (Hyrox, 1RM/RPE, Zone 2, MEV/MRV) & hybrid-athlete training ledger.",
   "license": "Apache-2.0",
   "type": "module",

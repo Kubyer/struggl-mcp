@@ -1,7 +1,7 @@
 {
   "name": "struggl",
   "displayName": "STRUGGL",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Zero-LLM-Math sports-science calculators (Hyrox splits, race autopsy, Wathan 1RM & RPE barbell plates, Karvonen Zone 2 HR, 17-muscle MEV/MAV/MRV audit, AMPK-mTOR interference tax) plus OAuth 2.1 hybrid-athlete training ledger.",
   "author": {
     "name": "Sing And Clap SASU",

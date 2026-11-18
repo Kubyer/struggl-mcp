@@ -11,7 +11,7 @@
  */
 import { createInterface } from "node:readline";
 
-const VERSION = "1.3.3";
+const VERSION = "1.4.0";
 const DEFAULT_API_URL = "https://struggl.singandclap.com";
 const TIMEOUT_MS = 30_000;
 

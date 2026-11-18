@@ -58,10 +58,11 @@
 
 ---
 
-## Part 2: 5 Authenticated Personal Ledger Tools (`Bearer stg_ath_...` or OAuth 2.1)
+## Part 2: 6 Authenticated Personal Ledger Tools (`Bearer stg_ath_...` or OAuth 2.1)
 
-1. `get_profile` (`read`): Biometrics, primary modality, training phase, and target race calendar.
-2. `get_sessions` (`read`): Completed and scheduled workouts over `days` (`1–90`, default `14`) or `date` (`YYYY-MM-DD`).
-3. `get_muscle_volume` (`read`): Live current-week 17-muscle hard-set ledger from logged workouts.
-4. `log_workout` (`write`): Persist one completed exercise with arg-keyed duplicate-write protection and automatic e1RM PR detection.
-5. `plan_workout` (`write`): Schedule one planned exercise on `date` (`YYYY-MM-DD`).
+1. `get_coaching_brief` (`read`, **recommended Step 1**): Single-call deterministic coaching brief (`days` `1–30`, default `14`) returning profile, goals, active pain/injury biomechanical constraints, EWMA ACWR training load, 17-muscle weekly MEV/MAV/MRV audit, measured Wathan e1RMs & sub-muscle balance, stored athlete equipment/preference memories, and recent sessions.
+2. `get_profile` (`read`): Biometrics, primary modality, training phase, and target race calendar.
+3. `get_sessions` (`read`): Completed and scheduled workouts over `days` (`1–90`, default `14`) or `date` (`YYYY-MM-DD`).
+4. `get_muscle_volume` (`read`): Live current-week 17-muscle hard-set ledger from logged workouts.
+5. `log_workout` (`write`): Persist one completed exercise or a multi-exercise batch (`sessions=[...]`, `session_title`, `debrief_summary`) with duplicate-write protection, e1RM PR detection, and automatic read-only connector mirror sync in the STRUGGL app.
+6. `plan_workout` (`write`): Schedule one planned exercise or a multi-exercise batch (`sessions=[...]`, `session_title`, `debrief_summary`, `replace=True`) on `date` (`YYYY-MM-DD`) with automatic connector mirror sync.
