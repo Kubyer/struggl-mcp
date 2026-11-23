@@ -20,6 +20,10 @@
   <a href="https://www.claudeai.directory/launches/struggl" target="_blank" rel="noopener"><img src="https://www.claudeai.directory/badge/struggl?theme=dark" alt="STRUGGL - Listed on Claude AI Directory" width="220" height="54" /></a>
 </p>
 
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/Kubyer/struggl-mcp"><img src="https://glama.ai/mcp/servers/Kubyer/struggl-mcp/badges/score.svg" alt="Kubyer/struggl-mcp MCP server" /></a>
+</p>
+
 ---
 
 ## Why This Exists
@@ -181,7 +185,7 @@ struggl-mcp/
 
 ## Security &amp; Privacy
 
-- **Zero Secrets in Repo:** This repository contains declarative manifests, open-source skill instructions, pure-stdlib physiology primitives, literature benchmarks, and a thin HTTP client (`mcp_server.py` imports only Python stdlib, `httpx`, and `mcp`). Run `python scripts/verify_public_bundle.py` to audit every file.
+- **Zero Secrets in Repo:** This repository contains declarative manifests, open-source skill instructions, pure-stdlib physiology primitives, literature benchmarks, and a thin HTTP client (`mcp_server.py` imports only Python stdlib, `httpx`, `pydantic`, and `mcp`). Run `python scripts/verify_public_bundle.py` to audit every file.
 - **OAuth 2.1 + Scoped Revocable Tokens:** Supports 1-click OAuth 2.1 + PKCE (`https://struggl.singandclap.com/v1/connector/mcp`) and optional scoped tokens (`stg_ath_...`), stored server-side strictly as SHA-256 hashes and revocable at `https://struggl.singandclap.com/connect`.
 - **Privacy Policy, Terms &amp; Support:** [Privacy Policy](https://struggl.singandclap.com/privacy) · [Terms of Service](https://struggl.singandclap.com/terms) · [API &amp; Connector Docs](https://struggl.singandclap.com/v1/connector/docs) · `taha@tbaziz.com`.
 

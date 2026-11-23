@@ -51,6 +51,7 @@ ALLOWED_MCP_SERVER_IMPORTS = frozenset({
     "typing",
     "httpx",
     "mcp",
+    "pydantic",
 })
 
 
